@@ -1,8 +1,10 @@
-# Exology — AI Finance Recorder & Accounting Dashboard
+# Exology AI Finance Recorder & Accounting Dashboard
+
+![Exology Financial Dashboard](dashboard.png)
 
 > Record any business transaction by sending a message. That's it.
 
-Exology is a lightweight, AI-powered financial tracking system built for small and medium business owners. Send a text, voice note, or receipt photo to a Telegram bot — the system extracts structured data, stores it, and keeps you informed with weekly health reports and cash drought alerts.
+Exology is a lightweight, AI-powered financial tracking system built for small and medium business owners. Send a text, voice note, or receipt photo to a Telegram bot the system extracts structured data, stores it, and keeps you informed with weekly health reports and cash drought alerts.
 
 ---
 
@@ -13,7 +15,7 @@ Telegram (text / voice / photo)
         ↓
    n8n Workflow Engine
         ↓
-  Gemini 2.5 Flash API   ←— understands Arabic & English
+  Gemini 2.5 Flash API   ←  understands Arabic & English
         ↓
    Google Sheets DB
         ↓
@@ -32,38 +34,38 @@ Three independent workflows handle everything automatically:
 
 ## Features
 
-- **Multi-modal input** — text, voice notes (.ogg), and receipt photos via Telegram
-- **Bilingual** — Arabic and English processed natively by Gemini 2.5 Flash
-- **Auto-categorization** — maps transactions to your Chart of Accounts automatically
-- **Data validation** — enforces amount, currency, and confidence rules before saving
-- **30-day forecasting** — projects income, expenses, and balance from 90-day history
-- **Cash drought alerts** — proactive Telegram message when projected balance turns negative
-- **Weekly health score** — AI-generated CFO report: Healthy / Warning / Critical
-- **Google Sheets database** — all data stored in structured, accessible spreadsheets
+- **Multi-modal input** text, voice notes (.ogg), and receipt photos via Telegram
+- **Bilingual** Arabic and English processed natively by Gemini 2.5 Flash
+- **Auto-categorization** maps transactions to your Chart of Accounts automatically
+- **Data validation** enforces amount, currency, and confidence rules before saving
+- **30-day forecasting** projects income, expenses, and balance from 90-day history
+- **Cash drought alerts** proactive Telegram message when projected balance turns negative
+- **Weekly health score** AI-generated CFO report: Healthy / Warning / Critical
+- **Google Sheets database** all data stored in structured, accessible spreadsheets
 
 ---
 
 ## Prerequisites
 
-- [n8n](https://n8n.io) instance (self-hosted or cloud) — v1.0+
-- Telegram Bot Token — create one via [@BotFather](https://t.me/BotFather)
+- [n8n](https://n8n.io) instance (self-hosted or cloud) v1.0+
+- Telegram Bot Token create one via [@BotFather](https://t.me/BotFather)
 - Google account with Google Sheets API enabled
-- [Gemini API Key](https://aistudio.google.com) — free tier available
+- [Gemini API Key](https://aistudio.google.com) free tier available
 
 ---
 
 ## Setup
 
-### 1 — Create n8n Credentials
+### 1 Create n8n Credentials
 
 In your n8n dashboard, go to **Credentials → New** and add:
 
-- **Telegram API** — paste your Bot Token from @BotFather. Name it `Exology Bot`.
-- **Google Sheets OAuth2** — authorize with your Google account. Name it `Exology Sheets`.
+- **Telegram API** paste your Bot Token from @BotFather. Name it `Exology Bot`.
+- **Google Sheets OAuth2** authorize with your Google account. Name it `Exology Sheets`.
 
-The Gemini API key is embedded directly in the HTTP Request nodes as a URL query parameter. No separate credential needed — just replace the placeholder key with your own in all three workflows.
+The Gemini API key is embedded directly in the HTTP Request nodes as a URL query parameter. No separate credential needed just replace the placeholder key with your own in all three workflows.
 
-### 2 — Set Up Google Sheets
+### 2 Set Up Google Sheets
 
 Create a new Google Spreadsheet with these three sheets (tabs):
 
@@ -86,7 +88,7 @@ health_score | summary | recommendation_1 |
 recommendation_2 | recommendation_3 | generated_at
 ```
 
-### 3 — Import the Workflows
+### 3 Import the Workflows
 
 1. Open your n8n dashboard and click **New Workflow**
 2. Click the three-dot menu `⋮` → **Import from File**
@@ -95,7 +97,7 @@ recommendation_2 | recommendation_3 | generated_at
    - `Exology - Forecasting.json`
    - `Exology - Health Score.json`
 
-### 4 — Update References
+### 4 Update References
 
 Inside each imported workflow:
 
@@ -103,7 +105,7 @@ Inside each imported workflow:
 - Replace the Google Sheets document ID `119LsTEEgaJfmMETDke7P_0ldZBZgAx1l3l_2w-WXJq4` with your own spreadsheet ID (found in the sheet URL)
 - Replace the Gemini API key in all HTTP Request nodes with your own key
 
-### 5 — Activate
+### 5 Activate
 
 Toggle each workflow to **Active**. The main workflow starts listening for Telegram messages immediately.
 
@@ -144,11 +146,11 @@ If `cash_drought` is true on any projected day, a Telegram alert is sent immedia
 
 ## Known Limitations
 
-- No confirmation step before saving — transactions are written immediately after extraction
+- No confirmation step before saving transactions are written immediately after extraction
 - Gemini free tier has rate limits; high-volume usage may cause delays
 - Only `.ogg` voice format (Telegram default) is tested
-- No duplicate detection — the same message can be recorded twice
-- Hardcoded single Telegram chat ID — multi-user support requires additional routing logic
+- No duplicate detection the same message can be recorded twice
+- Hardcoded single Telegram chat ID multi-user support requires additional routing logic
 - No built-in transaction editing; corrections require direct Sheets access
 
 ---
@@ -186,10 +188,10 @@ If `cash_drought` is true on any projected day, a Telegram alert is sent immedia
 
 ## Built With
 
-- [n8n](https://n8n.io) — workflow automation
-- [Gemini 2.5 Flash](https://aistudio.google.com) — AI extraction and analysis
-- [Telegram Bot API](https://core.telegram.org/bots/api) — user interface
-- Google Sheets — database and dashboard
+- [n8n](https://n8n.io) workflow automation
+- [Gemini 2.5 Flash](https://aistudio.google.com) AI extraction and analysis
+- [Telegram Bot API](https://core.telegram.org/bots/api) user interface
+- Google Sheets database and dashboard
 
 ---
 
