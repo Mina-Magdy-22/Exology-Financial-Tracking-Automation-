@@ -1,0 +1,835 @@
+{
+  "name": "Exology",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -528,
+        -176
+      ],
+      "id": "0fc4502b-3b61-4f54-b17d-6c6e862f815f",
+      "name": "Telegram Trigger",
+      "webhookId": "fa81ce66-0a54-494d-b4b6-cb0e9091d290",
+      "credentials": {
+        "telegramApi": {
+          "id": "86P3rqhc1A1AMSnr",
+          "name": "Exology Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ !!$json.message.text }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "id": "928d2bac-ded2-4b59-bf4e-ead7a9a8abfe"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b327d190-6784-4e3f-b743-87837dfe37b6",
+                    "leftValue": "={{ !!$json.message.voice?.file_id }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Voice"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fd879570-2ce6-493d-af2e-ab066e16ff68",
+                    "leftValue": "={{ !!$json.message.photo?.[0]?.file_id }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Photo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -320,
+        -176
+      ],
+      "id": "d12d89ed-fe85-4ca1-8fa0-c59a47ef319e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyB_4HMuyp_5-hogVg_LBJ4AOiYYgS8UFAg",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are a financial data extractor for a business. Extract transaction details from this message and return ONLY a valid JSON object with no markdown, no explanation, no code fences. Use exactly these fields:\\n{\\n  \\\"amount\\\": number,\\n  \\\"type\\\": \\\"income\\\" or \\\"expense\\\",\\n  \\\"category\\\": string,\\n  \\\"description\\\": string,\\n  \\\"payment_method\\\": \\\"cash\\\" or \\\"card\\\" or \\\"transfer\\\" or \\\"unknown\\\",\\n  \\\"vendor\\\": string or \\\"unknown\\\",\\n  \\\"currency\\\": \\\"EGP\\\" or \\\"USD\\\",\\n  \\\"confidence_score\\\": number between 0 and 1\\n}\\n\\nMessage to analyze: {{ $json.message.text }}\"\n    }]\n  }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -128,
+        -384
+      ],
+      "id": "c3f4b2d0-4099-49b0-954e-b7994c354a9e",
+      "name": "3A"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.candidates[0].content.parts[0].text;\nconst cleaned = raw\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\nlet parsed;\ntry {\n  parsed = JSON.parse(cleaned);\n} catch(e) {\n  return [{ json: { error: true, raw_response: raw } }];\n}\nparsed.transaction_id = 'TXN-' + Date.now();\nparsed.timestamp = new Date().toISOString();\nparsed.raw_input = $('Telegram Trigger').first().json.message.text || '';\nparsed.input_type = 'text';\nreturn [{ json: parsed }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        -464
+      ],
+      "id": "845dda2f-2491-4fb9-9b97-462e3a3379db",
+      "name": "4A"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot8588897907:AAHMU1rQscvTiA1q3yUCZORgdz2HOSi3Cz4/getFile?file_id={{ $json.message.voice.file_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -112,
+        -176
+      ],
+      "id": "e8cf5917-1403-4409-99be-f5b7eab7b611",
+      "name": "3B"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot8588897907:AAHMU1rQscvTiA1q3yUCZORgdz2HOSi3Cz4/{{ $json.result.file_path }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "audioData"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        96,
+        -176
+      ],
+      "id": "d77493a6-f58f-4a5b-ae5b-36774832c9fa",
+      "name": "4B"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.candidates[0].content.parts[0].text;\nconst cleaned = raw.replace(/```json/g, '').replace(/```/g, '').trim();\nlet parsed = JSON.parse(cleaned);\n\nparsed.timestamp = new Date().toISOString();\nparsed.raw_input = 'voice_message';\nparsed.input_type = 'voice';\n\nreturn [{ json: parsed }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        432
+      ],
+      "id": "d9dc6ef3-9066-4400-8136-4d065765b2ab",
+      "name": "NODE 5B-extra"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyB_4HMuyp_5-hogVg_LBJ4AOiYYgS8UFAg",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [\n      {\n        \"inline_data\": {\n          \"mime_type\": \"audio/ogg\",\n          \"data\": \"={{ Buffer.from($binary.audioData.data, 'base64').toString('base64') }}\"\n        }\n      },\n      {\n        \"text\": \"This is a voice message recording a business transaction. Transcribe it and extract the transaction details. Return ONLY a valid JSON object with no markdown:\\n{\\n  \\\"amount\\\": number,\\n  \\\"type\\\": \\\"income\\\" or \\\"expense\\\",\\n  \\\"category\\\": string,\\n  \\\"description\\\": string,\\n  \\\"payment_method\\\": string,\\n  \\\"vendor\\\": string,\\n  \\\"currency\\\": \\\"EGP\\\" or \\\"USD\\\",\\n  \\\"confidence_score\\\": number between 0 and 1\\n}\"\n      }\n    ]\n  }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        192,
+        384
+      ],
+      "id": "b2ce35fe-3436-4f78-b11f-f14a384c3e7e",
+      "name": "5B"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot8588897907:AAHMU1rQscvTiA1q3yUCZORgdz2HOSi3Cz4/getFile?file_id={{ $json.message.photo[$json.message.photo.length - 1].file_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -112,
+        -16
+      ],
+      "id": "5dc7e0e4-9fac-400b-9de5-a06cdbccd7af",
+      "name": "3C"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=media&key=AIzaSyB_4HMuyp_5-hogVg_LBJ4AOiYYgS8UFAg",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "image/jpeg"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "photoData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        384,
+        -16
+      ],
+      "id": "a90b3b6d-3828-4007-8e80-c9d981414588",
+      "name": "5C"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot8588897907:AAHMU1rQscvTiA1q3yUCZORgdz2HOSi3Cz4/{{ $json.result.file_path }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "image/jpeg"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "photoData"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        128,
+        16
+      ],
+      "id": "dd850022-224c-40d2-b738-6dc9af351c8b",
+      "name": "4C"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "119LsTEEgaJfmMETDke7P_0ldZBZgAx1l3l_2w-WXJq4",
+          "mode": "list",
+          "cachedResultName": "Ai sprint",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/119LsTEEgaJfmMETDke7P_0ldZBZgAx1l3l_2w-WXJq4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Transactions",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/119LsTEEgaJfmMETDke7P_0ldZBZgAx1l3l_2w-WXJq4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Transaction ID": "={{ 'TXN-' + Date.now() }}",
+            "timestamp": "={{ $json.timestamp }}",
+            "type": "={{ $json.type }}",
+            "amount": "={{ $json.amount }}",
+            "currency": "={{ $json.currency }}",
+            "category": "={{ $json.category }}",
+            "payment_method": "={{ $json.payment_method }}",
+            "vendor": "={{ $json.vendor }}",
+            "description": "={{ $json.description }}",
+            "confidence_score": "={{ $json.confidence_score }}",
+            "input_type": "={{ $json.input_type }}",
+            "raw_input": "={{ $json.raw_input }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Transaction ID",
+              "displayName": "Transaction ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "amount",
+              "displayName": "amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "currency",
+              "displayName": "currency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "payment_method",
+              "displayName": "payment_method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "vendor",
+              "displayName": "vendor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "confidence_score",
+              "displayName": "confidence_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "input_type",
+              "displayName": "input_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "raw_input",
+              "displayName": "raw_input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1280,
+        -176
+      ],
+      "id": "18d94800-7a56-41e6-91ee-aa23a220bd53",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3DdXAeon8i3rKurs",
+          "name": "Exology Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1088,
+        -272
+      ],
+      "id": "148c0772-3d6c-4c63-ba6b-073bf45334c2",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "=✅ Transaction Recorded\n\n💰 Amount: {{ $json.amount }} {{ $json.currency }}\n📊 Type: {{ $json.type }}\n📂 Category: {{ $json.category }}\n🏪 Vendor: {{ $json.vendor }}\n💳 Payment: {{ $json.payment_method }}\n📝 {{ $json.description }}\n🎯 Confidence: {{ Math.round($json.confidence_score * 100) }}%\n🆔 {{ $json['Transaction ID'] }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1488,
+        -176
+      ],
+      "id": "02885f17-3505-4da0-a28a-cae1aa91a698",
+      "name": "Send a text message",
+      "webhookId": "ebf49eb4-e9c9-4bae-94a3-cbf428f7ed09",
+      "credentials": {
+        "telegramApi": {
+          "id": "86P3rqhc1A1AMSnr",
+          "name": "Exology Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyB_4HMuyp_5-hogVg_LBJ4AOiYYgS8UFAg",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"file_data\": {\n            \"mime_type\": \"image/jpeg\",\n            \"file_uri\": \"={{ 'https://api.telegram.org/file/bot8588897907:AAHMU1rQscvTiA1q3yUCZORgdz2HOSi3Cz4/' + $json.result.file_path }}\"\n          }\n        },\n        {\n          \"text\": \"This is a receipt or invoice photo. Read it carefully and extract all transaction details. Return ONLY a valid JSON object with no markdown: { \\\"amount\\\": number, \\\"type\\\": \\\"income\\\" or \\\"expense\\\", \\\"category\\\": string, \\\"description\\\": string, \\\"payment_method\\\": \\\"cash\\\" or \\\"card\\\" or \\\"transfer\\\" or \\\"unknown\\\", \\\"vendor\\\": string or \\\"unknown\\\", \\\"currency\\\": \\\"EGP\\\" or \\\"USD\\\", \\\"confidence_score\\\": number between 0 and 1 }. If the receipt is unclear, set confidence_score to 0.3 or below.\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        656,
+        240
+      ],
+      "id": "de030d36-c915-431d-9bdd-d35ef22d57c3",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyB_4HMuyp_5-hogVg_LBJ4AOiYYgS8UFAg",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"file_data\": {\n            \"mime_type\": \"image/jpeg\",\n            \"file_uri\": \"{{ $json.file.uri }}\"\n          }\n        },\n        {\n          \"text\": \"This is a receipt or invoice photo. Read it carefully and extract all transaction details. Return ONLY a valid JSON object with no markdown: { \\\"amount\\\": number, \\\"type\\\": \\\"income\\\" or \\\"expense\\\", \\\"category\\\": string, \\\"description\\\": string, \\\"payment_method\\\": \\\"cash\\\" or \\\"card\\\" or \\\"transfer\\\" or \\\"unknown\\\", \\\"vendor\\\": string or \\\"unknown\\\", \\\"currency\\\": \\\"EGP\\\" or \\\"USD\\\", \\\"confidence_score\\\": number between 0 and 1 }. If the receipt is unclear, set confidence_score to 0.3 or below.\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        592,
+        -16
+      ],
+      "id": "0727236e-6c93-4f3c-bac0-e80ef178097b",
+      "name": "5C analysis"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.candidates[0].content.parts[0].text;\n\nconst jsonMatch = raw.match(/[\\[{][\\s\\S]*[\\]}]/);\n\nlet parsed;\ntry {\n  const result = JSON.parse(jsonMatch[0]);\n  \n  if (Array.isArray(result)) {\n    const expenseTotal = result\n      .filter(i => i.type === 'expense')\n      .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);\n    const incomeTotal = result\n      .filter(i => i.type === 'income')\n      .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);\n    \n    const net = incomeTotal - expenseTotal;\n    \n    parsed = result[0];\n    parsed.amount = Math.abs(net);\n    parsed.type = net >= 0 ? 'income' : 'expense';\n    parsed.description = result.map(i => i.description).join(', ');\n  } else {\n    parsed = result;\n  }\n} catch(e) {\n  return [{ json: { error: true, raw_response: raw } }];\n}\n\nparsed.transaction_id = 'TXN-' + Date.now();\nparsed.timestamp = new Date().toISOString();\nparsed.raw_input = 'photo_receipt';\nparsed.input_type = 'photo';\n\nreturn [{ json: parsed }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -16
+      ],
+      "id": "7d65cb79-e350-43fe-ab1b-b6323c2c5835",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=media&key=AIzaSyB_4HMuyp_5-hogVg_LBJ4AOiYYgS8UFAg",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "audio/ogg"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "audioData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        304,
+        -176
+      ],
+      "id": "4d3842af-828f-4310-a205-20c6775526d6",
+      "name": "5B upload"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyB_4HMuyp_5-hogVg_LBJ4AOiYYgS8UFAg",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"file_data\": {\n            \"mime_type\": \"audio/ogg\",\n            \"file_uri\": \"{{ $json.file.uri }}\"\n          }\n        },\n        {\n          \"text\": \"This is a voice message recording a business transaction. Transcribe it and extract the transaction details. Return ONLY a valid JSON object with no markdown: { \\\"amount\\\": number, \\\"type\\\": \\\"income\\\" or \\\"expense\\\", \\\"category\\\": string, \\\"description\\\": string, \\\"payment_method\\\": \\\"cash\\\" or \\\"card\\\" or \\\"transfer\\\" or \\\"unknown\\\", \\\"vendor\\\": string or \\\"unknown\\\", \\\"currency\\\": \\\"EGP\\\" or \\\"USD\\\", \\\"confidence_score\\\": number between 0 and 1 }\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        512,
+        -176
+      ],
+      "id": "133fc256-eea5-49d5-96f2-7f80c10877f6",
+      "name": "5B analysis"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.candidates[0].content.parts[0].text;\nconst jsonMatch = raw.match(/\\{[\\s\\S]*\\}/);\nlet parsed;\ntry {\n  parsed = JSON.parse(jsonMatch[0]);\n} catch(e) {\n  return [{ json: { error: true, raw_response: raw } }];\n}\nparsed.transaction_id = 'TXN-' + Date.now();\nparsed.timestamp = new Date().toISOString();\nparsed.raw_input = 'voice_message';\nparsed.input_type = 'voice';\nreturn [{ json: parsed }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        -192
+      ],
+      "id": "29951449-b9fd-41f1-bad7-296ee1a1f8e3",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "3A",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "3B",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "3C",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3A": {
+      "main": [
+        [
+          {
+            "node": "4A",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3B": {
+      "main": [
+        [
+          {
+            "node": "4B",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4B": {
+      "main": [
+        [
+          {
+            "node": "5B upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5B": {
+      "main": [
+        []
+      ]
+    },
+    "NODE 5B-extra": {
+      "main": [
+        []
+      ]
+    },
+    "3C": {
+      "main": [
+        [
+          {
+            "node": "4C",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4C": {
+      "main": [
+        [
+          {
+            "node": "5C",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4A": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5C": {
+      "main": [
+        [
+          {
+            "node": "5C analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "5C analysis": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "5B upload": {
+      "main": [
+        [
+          {
+            "node": "5B analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5B analysis": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "26f04576-833d-4d7a-9e2c-beb733b195ce",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fd415e16a6e3852ca7b2fc0b48a0c90b42de8a586343674c595dca170404aa1d"
+  },
+  "id": "8QgbAddWChWhY9jj",
+  "tags": []
+}
